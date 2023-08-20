@@ -5,7 +5,10 @@
     <title>Chat Room</title>
 </head>
 <body>
+    <h1>{{ room_name }}</h1>
     <textarea id="chat-log" cols="100" rows="20"></textarea><br>
+    <h3 id="count">0</h3>
+    <button id="increase">Increase</button>
     <input id="chat-message-input" type="text" size="100"><br>
     <input id="chat-message-submit" type="button" value="Send">
     {{ room_name|json_script:"room-name" }}
@@ -22,8 +25,16 @@
 
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            document.querySelector('#chat-log').value += (data.message + '\n');
+            console.log(data);
+            if (data.type === 'count') {
+                console.log('count received')
+                document.querySelector('#count').textContent = data.message;
+            } else {
+                console.log('message received')
+                document.querySelector('#chat-log').value += (data.message + '\n');
+            }
         };
+        
 
         chatSocket.onclose = function(e) {
             console.error('Chat socket closed unexpectedly');
@@ -40,9 +51,23 @@
             const messageInputDom = document.querySelector('#chat-message-input');
             const message = messageInputDom.value;
             chatSocket.send(JSON.stringify({
+                'type': 'message',
                 'message': message
             }));
             messageInputDom.value = '';
+        };
+
+        
+        document.querySelector('#increase').onclick = function(e) {
+            console.log('clicked')
+            const count = document.querySelector('#count');
+            const currentCount = parseInt(count.textContent); // Parse the current count as an integer
+            const newCount = currentCount + 1;
+            console.log(newCount);
+            chatSocket.send(JSON.stringify({
+                'type': 'count',
+                'count': newCount
+            }));
         };
     </script>
 </body>
