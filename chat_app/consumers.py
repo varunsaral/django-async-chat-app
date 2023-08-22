@@ -15,27 +15,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         json_data = json.loads(text_data)
-        if json_data['type'] == 'message':
-            message = json_data['message']
+        if json_data["type"] == "message":
+            message = json_data["message"]
             await self.channel_layer.group_send(
                 self.room_group_name, {"type": "chat.message", "message": message}
             )
-        elif json_data['type'] == 'count':
-            message = json_data['count']
+        elif json_data["type"] == "count":
+            message = json_data["count"]
             await self.channel_layer.group_send(
                 self.room_group_name, {"type": "increase_count", "count": message}
             )
-        
+
     async def chat_message(self, event):
         message = event["message"]
-        await self.send(text_data=json.dumps(
-            {   "type": "message",
-                "message": message
-            }))
+        await self.send(text_data=json.dumps({"type": "message", "message": message}))
 
     async def increase_count(self, event):
         count = event["count"]
-        await self.send(text_data=json.dumps(
-            {   "type": "count",
-                "message": int(count)
-            }))
+        await self.send(text_data=json.dumps({"type": "count", "message": int(count)}))
