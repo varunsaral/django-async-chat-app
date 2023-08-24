@@ -3,16 +3,79 @@
 <head>
     <meta charset="utf-8"/>
     <title>Chat Room</title>
+    <!-- Add these lines to include Bootstrap CSS and JavaScript -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Custom CSS for chat bubbles */
+        .chat-container {
+            height: 100vh;
+        }
+        .chat-log-container {
+            height: 90%;
+            overflow-y: auto;
+        }
+        .chat-input-container {
+            height: 10%;
+        }
+        .message-bubble {
+            background-color: #f1f1f1;
+            border-radius: 10px;
+            padding: 10px;
+            margin: 5px 0;
+            width: 100%; /* Full width */
+        }
+        
+    </style>
 </head>
 <body>
-    <h1>{{ room_name }}</h1>
-    <textarea id="chat-log" cols="100" rows="20"></textarea><br>
-    <h3 id="count">0</h3>
-    <button id="increase">Increase</button>
-    <input id="chat-message-input" type="text" size="100"><br>
-    <input id="chat-message-submit" type="button" value="Send">
+    <div class="container-fluid chat-container d-flex flex-column">
+        <div class="row chat-log-container">
+            <div class="col-12 bg-light">
+                <h1 class="text-center bg-light">{{ room_name }}</h1>
+                <div id="chat-log" class="messages-container"></div>
+            </div>
+        </div>
+        <div class="row chat-input-container">
+            <div class="col-12 bg-light py-3">
+                <div class="input-group">
+                    <input id="chat-message-input" class="form-control" type="text" placeholder="Type your message...">
+                    <button id="chat-message-submit" class="btn btn-primary">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
     {{ room_name|json_script:"room-name" }}
     <script>
+        const messageLog = document.getElementById('chat-log');
+        const messageInput = document.getElementById('chat-message-input');
+        const messageSubmit = document.getElementById('chat-message-submit');
+
+        messageInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent line break
+                messageSubmit.click();  // Simulate "Send" button click
+            }
+        });
+
+        messageSubmit.addEventListener('click', () => {
+            const message = messageInput.value.trim();
+            if (message) {
+                messageInput.value = '';
+                chatSocket.send(JSON.stringify({
+                    'type': 'message',
+                    'message': message
+                }));
+            }
+        });
+
+        function appendMessage(message) {
+            const messageBubble = document.createElement('div');
+            messageBubble.classList.add('message-bubble');
+            messageBubble.textContent = message;
+            messageLog.appendChild(messageBubble);
+            messageLog.scrollTop = messageLog.scrollHeight;
+        }
+        
         const roomName = JSON.parse(document.getElementById('room-name').textContent);
 
         const chatSocket = new WebSocket(
@@ -25,50 +88,14 @@
 
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            console.log(data);
-            if (data.type === 'count') {
-                console.log('count received')
-                document.querySelector('#count').textContent = data.message;
-            } else {
-                console.log('message received')
-                document.querySelector('#chat-log').value += (data.message + '\n');
-            }
+            const message = data.message;
+            appendMessage(message);
         };
-        
 
         chatSocket.onclose = function(e) {
             console.error('Chat socket closed unexpectedly');
         };
-
-        document.querySelector('#chat-message-input').focus();
-        document.querySelector('#chat-message-input').onkeyup = function(e) {
-            if (e.key === 'Enter') {  // enter, return
-                document.querySelector('#chat-message-submit').click();
-            }
-        };
-
-        document.querySelector('#chat-message-submit').onclick = function(e) {
-            const messageInputDom = document.querySelector('#chat-message-input');
-            const message = messageInputDom.value;
-            chatSocket.send(JSON.stringify({
-                'type': 'message',
-                'message': message
-            }));
-            messageInputDom.value = '';
-        };
-
-        
-        document.querySelector('#increase').onclick = function(e) {
-            console.log('clicked')
-            const count = document.querySelector('#count');
-            const currentCount = parseInt(count.textContent); // Parse the current count as an integer
-            const newCount = currentCount + 1;
-            console.log(newCount);
-            chatSocket.send(JSON.stringify({
-                'type': 'count',
-                'count': newCount
-            }));
-        };
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
