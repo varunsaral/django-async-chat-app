@@ -1,0 +1,31 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Chat Room</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'chat_app/css/chat.css' %}">
+</head>
+<body>
+    <div class="container-fluid chat-container d-flex flex-column">
+        <div class="row chat-log-container">
+            <div class="col-12 bg-light">
+                <h1 class="text-center bg-light">{{ room_name }}</h1>
+                <div id="chat-log" class="messages-container"></div>
+            </div>
+        </div>
+        <div class="row chat-input-container">
+            <div class="col-12 bg-light py-3">
+                <div class="input-group">
+                    <input id="chat-message-input" class="form-control" type="text" placeholder="Type your message...">
+                    <button id="chat-message-submit" class="btn btn-primary">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{ room_name|json_script:"room-name" }}
+    <script src="{% static 'chat_app/js/chat.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
