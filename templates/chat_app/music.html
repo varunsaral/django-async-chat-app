@@ -1,0 +1,67 @@
+{% load static %}
+<div id="audio-controls">
+  <button id="play-button">Play</button>
+  <button id="pause-button">Pause</button>
+</div>
+
+<div id="search-area">
+  <input type="text" id="search-query" placeholder="Enter search query" />
+  <button id="search-button">Search</button>
+</div>
+<div id="search-results"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
+<script>
+  var searchButton = document.getElementById("search-button");
+  var sound = null
+  var play_button = document.getElementById("play-button");
+  var pause_button = document.getElementById("pause-button");
+  searchButton.addEventListener("click", () => {
+    var searchQuery = document.getElementById("search-query").value;
+    var searchResultsContainer = document.getElementById("search-results");
+
+
+    searchResultsContainer.innerHTML = "";
+
+    // Send fetch request to Django view
+    fetch(`/search-youtube/?query=${encodeURIComponent(searchQuery)}`)
+      .then((response) => response.json())
+      .then((data) => {
+        var searchResults = data.results;
+        searchResults.forEach((result) => {
+          var resultDiv = document.createElement("div");
+          resultDiv.innerHTML = `
+                <h3>${result.title}</h3>
+                <button class="play-video" video_id="${result.video_id}">Play</button>
+            `;
+          searchResultsContainer.appendChild(resultDiv);
+        });
+      })
+      .catch((error) => console.error("Error fetching search results:", error));
+  });
+
+  document.addEventListener("click", function (event) {
+    if (event.target && event.target.classList.contains("play-video")) {
+      var video_id = event.target.getAttribute("video_id");
+
+      // Call the download endpoint to download audio from YouTube video
+      fetch(`/download/${encodeURIComponent(video_id)}`)
+        .then((response) => response.json())
+        .then((data) => {
+          var audioFile = data.audio_path;
+          // Create a Howl instance
+          sound = new Howl({
+            src: [audioFile],
+          });
+          sound.play();
+        })
+        .catch((error) => console.error("Error downloading audio:", error));
+    }
+  });
+
+  play_button.addEventListener("click", (e) => {
+    sound.play();
+  });
+  pause_button.addEventListener("click", (e) => {
+    sound.pause();
+  });
+</script>
