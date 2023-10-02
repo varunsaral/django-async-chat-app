@@ -1,6 +1,7 @@
 const messageLog = document.getElementById('chat-log');
 const messageInput = document.getElementById('chat-message-input');
 const messageSubmit = document.getElementById('chat-message-submit');
+var sound = null
 
 messageInput.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
@@ -38,10 +39,53 @@ const chatSocket = new WebSocket(
     + '/'
 );
 
+function displaySearchResults(results) {
+   
+}
+
 chatSocket.onmessage = function(e) {
     const data = JSON.parse(e.data);
+    console.log(data.message)
+    if (data.type == 'special_command_search') {
+        console.log(data)
+        // Display search results as clickable cards
+        data.message.forEach((result, index) => {
+            console.log(result)
+            const message = `${index + 1}. ${result.title}`;
+            appendMessage(message);
+        });
+        // displaySearchResults(data.message);
+     } 
+     if (data.type == 'special_command_play'){
+            video_id = data.message
+            if (sound) {
+                sound.stop();
+            }
+            // Call the download endpoint to download audio from YouTube video
+            fetch(`/download/${encodeURIComponent(video_id)}`)
+                .then((response) => response.json())
+                .then((data) => {
+                    var audioFile = data.audio_path;
+                    // Create a Howl instance
+                    sound = new Howl({
+                        src: [audioFile],
+                        html5: true
+                    });
+                    sound.play();
+    
+                    //clearing the search results 
+                    const searchResultsContainer = document.getElementById("search-results");
+                    searchResultsContainer.innerHTML = "";
+                    //clearing the search query box
+                    searchQueryBox.value = "";
+                })
+                .catch((error) => console.error("Error downloading audio:", error));
+            
+     }
+    else{
     const message = data.message;
     appendMessage(message);
+    }
 };
 
 chatSocket.onclose = function(e) {
