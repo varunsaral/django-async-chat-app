@@ -45,9 +45,7 @@ function displaySearchResults(results) {
 
 chatSocket.onmessage = function(e) {
     const data = JSON.parse(e.data);
-    console.log(data.message)
     if (data.type == 'special_command_search') {
-        console.log(data)
         // Display search results as clickable cards
         data.message.forEach((result, index) => {
             console.log(result)
@@ -56,7 +54,7 @@ chatSocket.onmessage = function(e) {
         });
         // displaySearchResults(data.message);
      } 
-     if (data.type == 'special_command_play'){
+     else if (data.type == 'special_command_play'){
             video_id = data.message
             if (sound) {
                 sound.stop();

@@ -20,7 +20,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if message.startswith("!search"):
             query = message[8:]
             results = await self.call_view(search_youtube, query=query)
-            self.scope["session"]["search_results"] = results['results'][:5] 
             text_data=json.dumps({
                 'results': results['results'][:5]
             })
@@ -48,6 +47,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def chat_special_search(self,event):
         message = json.loads(event["message"])
         self.search_results = message["results"]
+        print(self.search_results)
         await self.send(text_data=json.dumps({"type": "special_command_search", "message": message["results"]}))
     
     async def chat_special_play(self,event):
